@@ -1,0 +1,46 @@
+{
+  "languages": [
+    {
+      "code": "EN",
+      "name": "English",
+      "tier": "beta",
+      "version": "26.0"
+    },
+    {
+      "code": "NL",
+      "name": "Nederlands",
+      "tier": "beta",
+      "version": "26.0"
+    },
+    {
+      "code": "FR",
+      "name": "Français",
+      "tier": "beta",
+      "version": "26.0"
+    },
+    {
+      "code": "DE",
+      "name": "Deutsch",
+      "tier": "beta",
+      "version": "26.0"
+    },
+    {
+      "code": "IT",
+      "name": "Italiano",
+      "tier": "beta",
+      "version": "26.0"
+    },
+    {
+      "code": "RU",
+      "name": "Русский",
+      "tier": "beta",
+      "version": "26.0"
+    },
+    {
+      "code": "TR",
+      "name": "Türkçe",
+      "tier": "beta",
+      "version": "26.0"
+    }
+  ]
+}

@@ -36,9 +36,12 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23006600'/%3E%3Ctext x='16' y='25' font-family='Georgia,serif' font-weight='700' font-size='26' fill='%23ffffff' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E">
 <style>
-/* ── WordDock — v0.30-beta ──────────────────────────────────────
+/* ── WordDock — v0.30-beta.1 ────────────────────────────────────
    THE BETA COPY (beta.worddock.app): the hub is built here, never on the live site. No sync, no
    service worker (not a live host), not indexed.
+   beta.1 (hub round 1, v27/hub.md §3): a hub pair NL-EN is a list joined in the browser from
+   hub/nl.json + hub/en.json (ensureHub, beside ensureList); the picker "Pairs from the hub" on
+   All lists; opened pairs kept in wd_lens_hub. Pool, view, deck: the existing keys.
    Words: v27/build.md ("the three words"); columns: v27/columns.md.
    · list  = one space: its rows, its IDs, its pool (wd_rs_<key>). Nothing is
              shared across lists. A WD list is published (lists/<NAME>.json, on
@@ -164,6 +167,19 @@ tr.detail td{white-space:normal;padding:2px 10px 14px;border-bottom:.5px solid v
 body.cataloging .cat{display:grid}
 body.cataloging .wrap{display:none}
 .zone-mid{align-self:start;padding:2.75rem 0 1.25rem}   /* a fixed step under the WD lists, not centred in what is left */
+/* The hub picker: I speak / I learn, then Open; the pairs opened on this device under it. */
+.zone-hub{align-self:start;padding:1.5rem 0 1.25rem}
+.zone-hub[hidden]{display:none}
+.hub-pick{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:.9rem 0 .25rem}
+.hub-f{display:flex;align-items:center;gap:6px;height:36px;padding:0 4px 0 10px;border:.5px solid var(--line2);border-radius:8px;font-size:13px;color:var(--muted);background:var(--bg)}
+.hub-f select{border:none;outline:none;background:transparent;color:var(--fg);font-size:14px;height:32px;cursor:pointer;max-width:150px}
+.hub-f:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.open-btn{height:36px;padding:0 14px;border-radius:8px;border:.5px solid var(--line2);background:var(--bg);color:var(--fg);font-size:14px;cursor:pointer;white-space:nowrap}
+.open-btn:hover{background:var(--card)}
+.open-btn[disabled]{opacity:.4;cursor:default}
+td.go{text-align:right}
+.go button{background:none;border:none;color:var(--green2);font-size:13px;font-weight:600;cursor:pointer;padding:3px 7px;border-radius:7px}
+.go button:hover{background:var(--line)}
 /* The Excel door: a dashed box with a faint green tint at the end of the My lists it feeds;
    the whole box opens the file picker, the ? at its right opens the help. */
 .add-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:.9rem 0 0;padding:13px 16px;cursor:pointer;
@@ -344,6 +360,16 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
     <div class="empty" id="myEmpty" hidden data-t="noMatches"></div>
     <div class="add-row" id="addRow"><button class="add" id="btnAdd" data-t="add"></button><button class="help" id="btnHelp" data-t-aria="excelHelpAria">?</button></div>
   </section>
+  <section class="zone-hub" id="secHub" hidden>
+    <h2 class="sec-h" data-t="hubHeading"></h2>
+    <p class="sub" id="hubSub"></p>
+    <div class="hub-pick">
+      <label class="hub-f"><span data-t="iSpeak"></span><select id="hubSpeak"></select></label>
+      <label class="hub-f"><span data-t="iLearn"></span><select id="hubLearn"></select></label>
+      <button class="open-btn" id="hubOpen"></button>
+    </div>
+    <table><colgroup><col><col class="c-n"><col class="c-s"><col class="c-a"></colgroup><tbody id="hubBody"></tbody></table>
+  </section>
 </main>
 
 <main class="about show-rail" id="aboutbrowser">
@@ -403,6 +429,10 @@ const T = {
   prevPage: "Previous page", nextPage: "Next page", study: "Study",
   again: "Again", good: "Good", ok: "OK", cancel: "Cancel", close: "Close", keep: "Keep",
   wdHeading: "Published WD Lists", myHeading: "My Lists on this device", add: "+ Add a list from an Excel sheet",
+  // the hub (beta): pairs joined from one file per language
+  hubHeading: "Pairs from the hub", iSpeak: "I speak", iLearn: "I learn",
+  hubSub: (n, tier) => n + (n === 1 ? " language" : " languages") + " · " + tier,
+  hubOpen: k => "Open " + k, hubTier: tier => tier + " · unchecked",
   // the list surface
   words: n => n + (n === 1 ? " word" : " words"),
   lists: n => n + (n === 1 ? " list" : " lists"),
@@ -631,9 +661,54 @@ const sameOrder = (oldRows, newRows) => oldRows.length <= newRows.length && oldR
 const poolKey = k => "wd_rs_" + k;
 function moveKey(from, to){ try { const v = localStorage.getItem(from); if (v !== null) localStorage.setItem(to, v); localStorage.removeItem(from); } catch {} }
 function clearPool(k){ try { localStorage.removeItem(poolKey(k)); } catch {} }
+/* ── The hub (beta): one file per language, joined here into a pair. A pair is a list named
+   <SPEAK>-<LEARN> (NL-EN), with both codes in hub/index.json. Its rows are fetched on open, like a
+   WD list's, never stored; its pool, view and deck are any list's (wd_rs_NL-EN …). The pairs opened
+   on this device are remembered in wd_lens_hub, newest first. ── */
+const HUB_DIR = "hub/", HUB_SEEN = "wd_lens_hub", HUB_RE = /^([A-Z]{2})-([A-Z]{2})$/;
+const TIER_ORDER = ["beta", "checked", "stable"];            // lower = less checked; unknown counts as beta
+let hubIdx = null, hubIdxP = null;
+function loadHubIndex(){
+  if (!hubIdxP) hubIdxP = fetch(HUB_DIR + "index.json", { cache: "no-cache" })
+    .then(r => r.ok ? r.json() : null).then(j => { hubIdx = j && Array.isArray(j.languages) ? j.languages : []; return hubIdx; })
+    .catch(() => { hubIdxP = null; hubIdx = hubIdx || []; return hubIdx; });
+  return hubIdxP;
+}
+const hubLang = c => (hubIdx || []).find(x => canonKey(x.code) === c);
+/* A hub key: <A>-<B>, two different codes, both in index.json. Synchronous: false until the index is in. */
+function isHub(raw){
+  const m = canonKey(raw).match(HUB_RE);
+  return !!(m && m[1] !== m[2] && hubLang(m[1]) && hubLang(m[2]) && !isPublished(canonKey(raw)));
+}
+const tierRank = t => { const i = TIER_ORDER.indexOf(String(t || "").toLowerCase()); return i < 0 ? 0 : i; };
+function hubSeen(){ try { const a = JSON.parse(localStorage.getItem(HUB_SEEN)); return Array.isArray(a) ? a.filter(k => HUB_RE.test(k)) : []; } catch { return []; } }
+function markHubSeen(key){ const a = [key, ...hubSeen().filter(k => k !== key)]; try { localStorage.setItem(HUB_SEEN, JSON.stringify(a)); } catch {} }
+/* Join on ID. A row = the learn side's notes (L, ENT = t[0], CAT, SUB, TAG) and three pairs
+   q = speak.t[i], a = learn.t[i]; a row missing one of the three texts on either side is skipped. */
+async function ensureHub(key){
+  const l = getList(key), [, sp, le] = key.match(HUB_RE);
+  const get = async c => { try { const r = await fetch(HUB_DIR + c.toLowerCase() + ".json", { cache: "no-cache" }); return r.ok ? await r.json() : null; } catch { return null; } };
+  const [S, Lr] = await Promise.all([get(sp), get(le)]);
+  const ok3 = r => r && Array.isArray(r.t) && r.t.length >= 3 && [0, 1, 2].every(i => String(r.t[i] ?? "").trim());
+  let rows = null;
+  if (Array.isArray(S) && Array.isArray(Lr)){
+    const byId = new Map(S.map(r => [String(r.ID), r]));
+    rows = normalizeRows(Lr.filter(r => ok3(r) && ok3(byId.get(String(r.ID)))).map(r => {
+      const s = byId.get(String(r.ID));
+      return { ID: r.ID, L: r.L, ENT: r.t[0], CAT: r.CAT, SUB: r.SUB, TAG: r.TAG,
+        pairs: [0, 1, 2].map(i => ({ q: String(s.t[i]).trim(), a: String(r.t[i]).trim() })) };
+    }));
+  }
+  const ts = [hubLang(sp), hubLang(le)].map(x => (x && x.tier) || "beta");
+  l.hub = true; l.tier = tierRank(ts[0]) <= tierRank(ts[1]) ? ts[0] : ts[1];
+  l.rows = rows && rows.length ? rows : null; l.loaded = true; l.checked = true;
+  if (l.rows){ markHubSeen(key); try { localStorage.setItem("wd_rowcount_" + key, String(l.rows.length)); } catch {} }
+  return l;
+}
 async function ensureList(raw){
   const key = canonKey(raw), l = getList(key);
   if (l.loaded && (l.checked || !isPublished(key))) return l;
+  if (!isPublished(key) && !l.own && HUB_RE.test(key)){ await loadHubIndex(); if (isHub(key)) return ensureHub(key); }
   let rows = null;
   if (isPublished(key)){
     try { const r = await fetch(LISTS_DIR + key + ".json", { cache: "no-cache" }); if (r.ok) rows = normalizeRows(await r.json()); } catch {}
@@ -1016,7 +1091,7 @@ function renderList(){
       lv = sp ? (sp.lo === sp.hi ? T.levelOne(sp.lo) : T.levelSpan(sp.lo, sp.hi)) : (range && range !== "bad" ? T.levelOne(lvlText.trim()) : "");
     }
     const since = l.own ? ownSince(viewKey) : "";
-    $("sub").textContent = [lv, nWords(rows.length), l.own ? (since ? T.onDeviceSince(since) : T.onDevice) : ""].filter(Boolean).join(" · ");
+    $("sub").textContent = [lv, nWords(rows.length), l.own ? (since ? T.onDeviceSince(since) : T.onDevice) : "", l.hub ? T.hubTier(l.tier) : ""].filter(Boolean).join(" · ");
     if (sortKey) rows = [...rows].sort((x, y) => {
       const a = sortVal(x, sortKey, pool), b = sortVal(y, sortKey, pool);
       const c = (typeof a === "number" && typeof b === "number") ? a - b : String(a).localeCompare(String(b));
@@ -1058,9 +1133,45 @@ function renderCatalog(){
   for (const l of all) if ((!l.loaded || (isPublished(l.key) && !l.checked)) && !l.fetching){ l.fetching = true; ensureList(l.key).then(() => { if (level === "catalog") renderCatalog(); }); }
   renderSection("wd", all.filter(l => !l.own), T.published);
   renderSection("my", all.filter(l => l.own), T.onThisDevice);
+  renderHub();
   renderSyncLine();
   renderPos();
 }
+/* The third section: two selects and Open; under them the pairs opened on this device
+   (name · count · Study), one tap to re-open. Hidden until hub/index.json has two languages. */
+const HUBSEL = { sp: "", le: "" };
+function renderHub(){
+  if (!hubIdx){ loadHubIndex().then(() => { if (level === "catalog") renderHub(); }); return; }
+  const langs = hubIdx.filter(x => x && /^[A-Za-z]{2}$/.test(x.code)).map(x => ({ code: canonKey(x.code), name: x.name || x.code, tier: x.tier || "beta" }));
+  $("secHub").hidden = langs.length < 2;
+  if (langs.length < 2) return;
+  const has = c => langs.some(x => x.code === c);
+  if (!has(HUBSEL.sp)){                         // first time: the last pair opened here, else the first two
+    const last = hubSeen().map(k => k.match(HUB_RE)).find(m => m && has(m[1]) && has(m[2]));
+    HUBSEL.sp = last ? last[1] : langs[0].code; HUBSEL.le = last ? last[2] : "";
+  }
+  if (!has(HUBSEL.le) || HUBSEL.le === HUBSEL.sp) HUBSEL.le = langs.find(x => x.code !== HUBSEL.sp).code;
+  const minT = langs.reduce((t, x) => tierRank(x.tier) < tierRank(t) ? x.tier : t, langs[0].tier);
+  $("hubSub").textContent = T.hubSub(langs.length, minT);
+  const fill = (sel, list, v) => { sel.innerHTML = ""; for (const x of list){ const o = document.createElement("option"); o.value = x.code; o.textContent = x.name; sel.appendChild(o); } sel.value = v; };
+  fill($("hubSpeak"), langs, HUBSEL.sp);
+  fill($("hubLearn"), langs.filter(x => x.code !== HUBSEL.sp), HUBSEL.le);
+  $("hubOpen").textContent = T.hubOpen(HUBSEL.sp + "-" + HUBSEL.le);
+  const body = $("hubBody"); body.innerHTML = "";
+  for (const key of hubSeen().filter(isHub)){
+    const tr = document.createElement("tr"), n = knownCount(key);
+    const tdN = document.createElement("td"); tdN.className = "b"; tdN.textContent = key;
+    const tdW = document.createElement("td"); tdW.className = "id"; tdW.textContent = n ?? "·";
+    const tdS = document.createElement("td"); tdS.className = "now"; if (key === activeKey) tdS.textContent = T.studyingNow;
+    const tdA = document.createElement("td"); tdA.className = "go";
+    const b = document.createElement("button"); b.textContent = T.study;
+    b.addEventListener("click", e => { e.stopPropagation(); studyHub(key); }); tdA.appendChild(b);
+    tr.append(tdN, tdW, tdS, tdA);
+    tr.addEventListener("click", () => goList(key)); body.appendChild(tr);
+  }
+}
+/* Study from the hub row: open the pair's table, then the green button's own path (onStudy). */
+async function studyHub(key){ await ensureList(key); goList(key); if (getList(key).rows) onStudy(); }
 function renderSection(id, lists, unit){
   const S = CAT[id], qq = strip(S.q), body = $(id + "Body");
   body.innerHTML = "";
@@ -1723,6 +1834,9 @@ $("btnStudy").addEventListener("click", onStudy);
 $("catStudy").addEventListener("click", () => enterStudy());
 $("btnAdd").addEventListener("click", () => { $("fileIn").value = ""; $("fileIn").click(); });
 $("syncLine").addEventListener("click", showSyncPanel);
+$("hubSpeak").addEventListener("change", e => { HUBSEL.sp = e.target.value; if (HUBSEL.le === HUBSEL.sp) HUBSEL.le = ""; renderHub(); });
+$("hubLearn").addEventListener("change", e => { HUBSEL.le = e.target.value; renderHub(); });
+$("hubOpen").addEventListener("click", () => { if (HUBSEL.sp && HUBSEL.le) goList(HUBSEL.sp + "-" + HUBSEL.le); });
 $("btnHelp").addEventListener("click", e => { e.stopPropagation(); showHelp(); });
 $("addRow").addEventListener("click", e => { if (!e.target.closest("#btnAdd")) $("btnAdd").click(); });
 $("helpX").addEventListener("click", hideHelp); $("helpClose").addEventListener("click", hideHelp);
@@ -1786,7 +1900,7 @@ setTimeout(bootDone, 5000);                      // a safety net: never stay hid
   try {
     const p = new URLSearchParams(location.search), raw = p.get("list");
     if (raw !== null){
-      const k = canonKey(raw); if (WD_KEYS.includes(k)) linked = k;
+      const k = canonKey(raw); if (WD_KEYS.includes(k) || HUB_RE.test(k)) linked = k;   // a hub pair is checked when it loads
       p.delete("list"); const qs = p.toString();
       history.replaceState(history.state, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
     }
@@ -1814,14 +1928,14 @@ setTimeout(bootDone, 5000);                      // a safety net: never stay hid
   startSyncPullTimer();
   level = "list";
   if (linked){ goList(linked, true); try { history.replaceState(navState(), ""); } catch {} bootDone(); return; }   // a link lands on the table, Study one tap away
-  if (back){ resumeScreen(back); bootDone(); return; }
+  if (back){ if (HUB_RE.test(canonKey(back.k || ""))) await loadHubIndex(); resumeScreen(back); bootDone(); return; }
   try { history.replaceState(navState(), ""); } catch {}
   enterStudy();
   bootDone();
 })();
 function resumeScreen(s){
   if (s.level === "catalog"){ goCatalog(true); return; }
-  const k = canonKey(s.k || activeKey), known = isPublished(k) || (LISTS[k] && LISTS[k].own);
+  const k = canonKey(s.k || activeKey), known = isPublished(k) || (LISTS[k] && LISTS[k].own) || isHub(k);
   if (s.level === "about"){ goCatalog(true); openAbout(true, s.pane === "detail" && isSmall() ? "detail" : "rail"); return; }
   goList(known ? k : activeKey, true);
 }
