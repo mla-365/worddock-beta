@@ -36,12 +36,15 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23006600'/%3E%3Ctext x='16' y='25' font-family='Georgia,serif' font-weight='700' font-size='26' fill='%23ffffff' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E">
 <style>
-/* ── WordDock — v0.30-beta.1 ────────────────────────────────────
+/* ── WordDock — v0.30-beta.2 ────────────────────────────────────
    THE BETA COPY (beta.worddock.app): the hub is built here, never on the live site. No sync, no
    service worker (not a live host), not indexed.
    beta.1 (hub round 1, v27/hub.md §3): a hub pair NL-EN is a list joined in the browser from
-   hub/nl.json + hub/en.json (ensureHub, beside ensureList); the picker "Pairs from the hub" on
+   hub/nl.json + hub/en.json (hubRows, called from ensureList); the picker "Pairs from the hub" on
    All lists; opened pairs kept in wd_lens_hub. Pool, view, deck: the existing keys.
+   beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
+   NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
+   belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
    Words: v27/build.md ("the three words"); columns: v27/columns.md.
    · list  = one space: its rows, its IDs, its pool (wd_rs_<key>). Nothing is
              shared across lists. A WD list is published (lists/<NAME>.json, on
@@ -473,7 +476,7 @@ const T = {
   // the template: a note on each header cell, and the same lines on a second sheet "Read me"
   tplNotes: { ENT: "the word itself (empty: A1 is taken)", CAT: "word class", SUB: "what the word is: m, f, irregular …", TAG: "where it belongs: a theme, a text …",
     L: "level: A1 … C2, or A1.3 for a unit", Q1: "the question", A1: "the answer", Q2: "more sides of the same word: a prompt (gen., mv. …)", A2: "… and its answer, up to Q10 · A10" },
-  tplReadme: ["WordDock — a list from an Excel sheet", "", "Name the columns in the first row: ENT · CAT · SUB · TAG · L · Q1 · A1 … Q10 · A10.",
+  tplReadme: ["WordDock: a list from an Excel sheet", "", "Name the columns in the first row: ENT · CAT · SUB · TAG · L · Q1 · A1 … Q10 · A10.",
     "Only Q1 and A1 are required in a row; the rest may stay empty.", "", "@notes", "",
     "The file name becomes the list name, in capitals: NL-LA-Test.xlsx → NL-LA-TEST.",
     "Two example rows: the shortest possible (water · aqua), and a full one (rosa, with its ten pairs).",
@@ -481,7 +484,7 @@ const T = {
   excelTemplate: "Download Template.xlsx",
   // sync: the bottom line of LISTS. "Sync is on" claims only what the page knows; a time
   // ("synced just now") would claim that this device is current, which it can't know.
-  keepSafe: "Keep progress safe", syncOn: "Sync is on", notSynced: "Not synced — will retry",
+  keepSafe: "Keep progress safe", syncOn: "Sync is on", notSynced: "Not synced. Will retry",
   // sync: the dialog (the dark page's texts)
   syncOffTitleMain: "Sync is off", syncOffDesc: "Your progress lives only in this browser.",
   syncHaveKey: "I have a key", syncCreateKey: "Create a key",
@@ -540,7 +543,7 @@ const T = {
 };
 /* ── WD lists, published on this site: one line. A new WD list = one JSON file (lists/<NAME>.json)
    + its name here. ── */
-const WD_LISTS = ["NL-LA", "WORDDOCK", "ROME"];
+const WD_LISTS = ["NL-LA-TEST", "WORDDOCK", "ROME"];
 /* A first visit (no list stored on this device) lands in the list that explains WordDock. */
 const FIRST_OPEN = "WORDDOCK";
 /* A list has one name, shown everywhere as it is: letters, digits and hyphens, in capitals
@@ -685,7 +688,8 @@ function hubSeen(){ try { const a = JSON.parse(localStorage.getItem(HUB_SEEN)); 
 function markHubSeen(key){ const a = [key, ...hubSeen().filter(k => k !== key)]; try { localStorage.setItem(HUB_SEEN, JSON.stringify(a)); } catch {} }
 /* Join on ID. A row = the learn side's notes (L, ENT = t[0], CAT, SUB, TAG) and three pairs
    q = speak.t[i], a = learn.t[i]; a row missing one of the three texts on either side is skipped. */
-async function ensureHub(key){
+/* A pair's joined rows (or null). Marks the list as a hub pair with its tier; ensureList does the rest. */
+async function hubRows(key){
   const l = getList(key), [, sp, le] = key.match(HUB_RE);
   const get = async c => { try { const r = await fetch(HUB_DIR + c.toLowerCase() + ".json", { cache: "no-cache" }); return r.ok ? await r.json() : null; } catch { return null; } };
   const [S, Lr] = await Promise.all([get(sp), get(le)]);
@@ -701,23 +705,26 @@ async function ensureHub(key){
   }
   const ts = [hubLang(sp), hubLang(le)].map(x => (x && x.tier) || "beta");
   l.hub = true; l.tier = tierRank(ts[0]) <= tierRank(ts[1]) ? ts[0] : ts[1];
-  l.rows = rows && rows.length ? rows : null; l.loaded = true; l.checked = true;
-  if (l.rows){ markHubSeen(key); try { localStorage.setItem("wd_rowcount_" + key, String(l.rows.length)); } catch {} }
-  return l;
+  if (rows && rows.length){ markHubSeen(key); try { localStorage.setItem("wd_rowcount_" + key, String(rows.length)); } catch {} }
+  return rows;
 }
+/* Published = a WD list or a hub pair: both win over a My list with the same name (decided 10 Oct). */
+const isPub = key => isPublished(key) || isHub(key);
 async function ensureList(raw){
   const key = canonKey(raw), l = getList(key);
-  if (l.loaded && (l.checked || !isPublished(key))) return l;
-  if (!isPublished(key) && !l.own && HUB_RE.test(key)){ await loadHubIndex(); if (isHub(key)) return ensureHub(key); }
+  if (!isPublished(key) && HUB_RE.test(key)) await loadHubIndex();   // cached after the first call
+  const hub = isHub(key);
+  if (l.loaded && (l.checked || !isPub(key))) return l;
   let rows = null;
-  if (isPublished(key)){
+  if (hub) rows = await hubRows(key);
+  else if (isPublished(key)){
     try { const r = await fetch(LISTS_DIR + key + ".json", { cache: "no-cache" }); if (r.ok) rows = normalizeRows(await r.json()); } catch {}
     if (!rows && key === "NL-RU" && location.hostname !== "worddock.app"){ rows = sampleRows(); usingSample = true; }
   }
   l.checked = true;
   if (rows && rows.length && l.own){
-    // A WD list now holds this name. The copy on this device always steps aside to <NAME>-OWN,
-    // with its progress and view; the WD list starts fresh.
+    // A WD list or a hub pair now holds this name. The copy on this device always steps aside to
+    // <NAME>-OWN, with its progress and view; the published list starts fresh.
     const o = readOwn(), alt = key + OWN_SUFFIX, rec = o[key] || {};
     o[alt] = { rows: rec.rows, when: rec.when }; delete o[key]; writeOwn(o);
     const ol = getList(alt); ol.rows = l.rows; ol.loaded = true; ol.own = true; ol.checked = true;
@@ -1130,7 +1137,7 @@ function setQuery(v){
 function renderCatalog(){
   const all = listKeys().map(k => getList(k));
   // WD lists not seen yet: fetch them, so the Words column fills in.
-  for (const l of all) if ((!l.loaded || (isPublished(l.key) && !l.checked)) && !l.fetching){ l.fetching = true; ensureList(l.key).then(() => { if (level === "catalog") renderCatalog(); }); }
+  for (const l of all) if ((!l.loaded || (isPub(l.key) && !l.checked)) && !l.fetching){ l.fetching = true; ensureList(l.key).then(() => { if (level === "catalog") renderCatalog(); }); }
   renderSection("wd", all.filter(l => !l.own), T.published);
   renderSection("my", all.filter(l => l.own), T.onThisDevice);
   renderHub();
@@ -1141,7 +1148,7 @@ function renderCatalog(){
    (name · count · Study), one tap to re-open. Hidden until hub/index.json has two languages. */
 const HUBSEL = { sp: "", le: "" };
 function renderHub(){
-  if (!hubIdx){ loadHubIndex().then(() => { if (level === "catalog") renderHub(); }); return; }
+  if (!hubIdx){ loadHubIndex().then(() => { if (level === "catalog") renderCatalog(); }); return; }
   const langs = hubIdx.filter(x => x && /^[A-Za-z]{2}$/.test(x.code)).map(x => ({ code: canonKey(x.code), name: x.name || x.code, tier: x.tier || "beta" }));
   $("secHub").hidden = langs.length < 2;
   if (langs.length < 2) return;
@@ -1257,7 +1264,7 @@ function goList(raw, fromPop){
   $("q").value = qText;
   show(); pushNav(fromPop);
   const l = getList(key);
-  if (!l.loaded || (isPublished(key) && !l.checked)) ensureList(key).then(() => {
+  if (!l.loaded || (isPub(key) && !l.checked) || (HUB_RE.test(key) && !hubIdx)) ensureList(key).then(() => {
     if (level !== "list") return;
     if (viewKey === key || viewKey === key + OWN_SUFFIX) show();
   });
@@ -1906,6 +1913,9 @@ setTimeout(bootDone, 5000);                      // a safety net: never stay hid
     }
   } catch {}
   applyT();
+  // Name check: a WD list may not carry a hub pair's name (both codes in hub/index.json). A warning, nothing more.
+  loadHubIndex().then(() => { for (const k of WD_KEYS){ const m = k.match(HUB_RE);
+    if (m && m[1] !== m[2] && hubLang(m[1]) && hubLang(m[2])) console.warn("WordDock: the WD list " + k + " has a hub pair's name."); } });
   loadOwn();
   let wanted = null; try { wanted = localStorage.getItem(LIST_KEY); } catch {}
   wanted = canonKey(linked || wanted || (WD_KEYS.includes(FIRST_OPEN) ? FIRST_OPEN : WD_KEYS[0]));

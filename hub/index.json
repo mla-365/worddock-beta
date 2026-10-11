@@ -41,6 +41,12 @@
       "name": "Türkçe",
       "tier": "beta",
       "version": "26.0"
+    },
+    {
+      "code": "LA",
+      "name": "Latina",
+      "tier": "beta",
+      "version": "26.0"
     }
   ]
 }
