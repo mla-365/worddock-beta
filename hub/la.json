@@ -34,7 +34,7 @@
 {"ID": "0033", "L": "A1.2", "ENT": "ea", "CAT": "pronoun", "SUB": "", "TAG": "people", "t": ["ea (is, ea, id)", "Ea nōn est speculātrīx.", "Estne ea agēns? Ita."]},
 {"ID": "0034", "L": "A1.2", "ENT": "amicus", "CAT": "noun", "SUB": "m., II", "TAG": "people", "t": ["amīcus, -ī", "Dominus X amīcus est.", "Quis est amīcus?"]},
 {"ID": "0035", "L": "A1.2", "ENT": "amica", "CAT": "noun", "SUB": "f., I", "TAG": "people", "t": ["amīca, -ae", "Agēns Y amīca est.", "Estne ea bona amīca?"]},
-{"ID": "0036", "L": "A1.2", "ENT": "collega, -ae", "CAT": "noun", "SUB": "m./f., I", "TAG": "work", "t": ["collega, -ae", "Collēga et amīcus.", "Quis est collēga?"]},
+{"ID": "0036", "L": "A1.2", "ENT": "collega", "CAT": "noun", "SUB": "m./f., I", "TAG": "work", "t": ["collēga, -ae", "Collēga et amīcus.", "Quis est collēga?"]},
 {"ID": "0037", "L": "A1.2", "ENT": "dies", "CAT": "noun", "SUB": "m., V", "TAG": "time", "t": ["diēs, -ēī", "Hic est bonus diēs.", "Estne hic bonus diēs?"]},
 {"ID": "0038", "L": "A1.2", "ENT": "bonum diem", "CAT": "phrase", "SUB": "", "TAG": "time", "t": ["bonum diem", "Bonum diem, Agēns Y!", "Bonum diem, Domine X."]},
 {"ID": "0039", "L": "A1.2", "ENT": "edo", "CAT": "verb", "SUB": "III", "TAG": "food", "t": ["edō, edere", "Agēns Y edit.", "Editne ea?"]},

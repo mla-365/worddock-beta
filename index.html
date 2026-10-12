@@ -36,7 +36,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23006600'/%3E%3Ctext x='16' y='25' font-family='Georgia,serif' font-weight='700' font-size='26' fill='%23ffffff' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E">
 <style>
-/* ── WordDock — v0.30-beta.2 ────────────────────────────────────
+/* ── WordDock — v0.30-beta.3 ────────────────────────────────────
    THE BETA COPY (beta.worddock.app): the hub is built here, never on the live site. No sync, no
    service worker (not a live host), not indexed.
    beta.1 (hub round 1, v27/hub.md §3): a hub pair NL-EN is a list joined in the browser from
@@ -45,6 +45,8 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.3: the ↓ on opened pairs (the sheet through exportList, curator's layout, NL-LA.xlsx); a pair's
+   ENT is the learn file's ENT, the naked form (t[0] may carry more: collēga, -ae).
    Words: v27/build.md ("the three words"); columns: v27/columns.md.
    · list  = one space: its rows, its IDs, its pool (wd_rs_<key>). Nothing is
              shared across lists. A WD list is published (lists/<NAME>.json, on
@@ -181,8 +183,8 @@ body.cataloging .wrap{display:none}
 .open-btn:hover{background:var(--card)}
 .open-btn[disabled]{opacity:.4;cursor:default}
 td.go{text-align:right}
-.go button{background:none;border:none;color:var(--green2);font-size:13px;font-weight:600;cursor:pointer;padding:3px 7px;border-radius:7px}
-.go button:hover{background:var(--line)}
+.go button:not(.ib){background:none;border:none;color:var(--green2);font-size:13px;font-weight:600;cursor:pointer;padding:3px 7px;border-radius:7px}
+.go button:not(.ib):hover{background:var(--line)}
 /* The Excel door: a dashed box with a faint green tint at the end of the My lists it feeds;
    the whole box opens the file picker, the ? at its right opens the help. */
 .add-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:.9rem 0 0;padding:13px 16px;cursor:pointer;
@@ -309,6 +311,7 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
   .hide-s{display:none}
   input[type=search]{min-width:0;flex:1 1 150px}
   .cat col.c-n{width:36px}.cat col.c-s{width:104px}.cat col.c-a{width:76px}   /* room for "studying now", the date, and ↓ × */
+  #secHub col.c-s{width:96px} #secHub col.c-a{width:102px}   /* pair rows: Study and ↓ side by side */
   .card{height:200px;padding:24px 22px}
   .card-text{font-size:24px}
   .about{padding-left:12px;padding-right:12px}
@@ -699,7 +702,7 @@ async function hubRows(key){
     const byId = new Map(S.map(r => [String(r.ID), r]));
     rows = normalizeRows(Lr.filter(r => ok3(r) && ok3(byId.get(String(r.ID)))).map(r => {
       const s = byId.get(String(r.ID));
-      return { ID: r.ID, L: r.L, ENT: r.t[0], CAT: r.CAT, SUB: r.SUB, TAG: r.TAG,
+      return { ID: r.ID, L: r.L, ENT: r.ENT, CAT: r.CAT, SUB: r.SUB, TAG: r.TAG,
         pairs: [0, 1, 2].map(i => ({ q: String(s.t[i]).trim(), a: String(r.t[i]).trim() })) };
     }));
   }
@@ -1173,6 +1176,9 @@ function renderHub(){
     const tdA = document.createElement("td"); tdA.className = "go";
     const b = document.createElement("button"); b.textContent = T.study;
     b.addEventListener("click", e => { e.stopPropagation(); studyHub(key); }); tdA.appendChild(b);
+    // The sheet out, as on the WD lists: a pair is published, so ↓ and no ×. Rows load first if needed.
+    const d = document.createElement("button"); d.className = "ib"; d.textContent = "↓"; d.title = T.excelOut(key);
+    d.addEventListener("click", async e => { e.stopPropagation(); await ensureList(key); exportList(key); }); tdA.appendChild(d);
     tr.append(tdN, tdW, tdS, tdA);
     tr.addEventListener("click", () => goList(key)); body.appendChild(tr);
   }
