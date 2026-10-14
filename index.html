@@ -34,7 +34,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%235c1a1b'/%3E%3Ctext x='16' y='25' font-family='Georgia,serif' font-weight='700' font-size='26' fill='%23ffffff' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23efede6'/%3E%3Cg font-family='Didot,Bodoni 72,Georgia,serif' font-size='28' text-anchor='middle'%3E%3Ctext x='16.8' y='25.8' fill='%23aca695'%3EW%3C/text%3E%3Ctext x='15.4' y='24.4' fill='%23ffffff'%3EW%3C/text%3E%3Ctext x='16' y='25' fill='%23f3f1ea'%3EW%3C/text%3E%3C/g%3E%3C/svg%3E">
 <style>
 /* ── WordDock — v0.30-beta.3 ────────────────────────────────────
    THE BETA COPY (beta.worddock.app): the hub is built here, never on the live site. No sync, no
@@ -45,6 +45,7 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.10: the W embossed: paper-white, pressed up from the page (bottom line and tab icon).
    beta.9: the W (and the tab icon) in oxblood #5c1a1b, a test; Good back to white at rest.
    beta.8: the W moves to the bottom line, fixed just left of the centre; the door starts just right of
    the centre, so the two sit side by side: green W, then the grey door.
@@ -90,8 +91,11 @@ button,select,input{font-family:inherit}
    every page, so the headings of the table and of All lists sit at the same y. ── */
 .top{position:relative;height:52px}
 /* beta.7: GitHub green (#1f883d). beta.6: the W, a small mark at the top centre of every page. A mark, not a door: it does nothing. */
-.mark{position:absolute;right:calc(50% + 2px);top:24px;transform:translateY(-50%);width:22px;height:22px;border-radius:5px;background:#5c1a1b;
-  color:#fff;font-family:Georgia,serif;font-weight:700;font-size:16px;line-height:22px;text-align:center;user-select:none;pointer-events:none}
+.mark{position:absolute;right:calc(50% + 4px);top:24px;transform:translateY(-50%);width:26px;height:26px;
+  font-family:"Didot","Bodoni 72","Bodoni MT",Georgia,"Times New Roman",serif;font-weight:400;font-size:26px;line-height:26px;text-align:center;
+  color:#f6f5f0;   /* paper, pressed up: the letter is the page's own white, its relief drawn by light from the top left */
+  text-shadow:-1px -1px 0 #fff, 1px 1px 1px rgba(60,55,45,.5), 1px 2px 4px rgba(60,55,45,.22);
+  user-select:none;pointer-events:none}
 /* ── the bottom line: one small door, centred, on every page — card: the list's name (to the table);
    table: All lists; All lists: About WordDock, with the sync status at the left; About: All lists. ── */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:66px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
