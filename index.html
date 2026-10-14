@@ -45,6 +45,9 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.4: the bottom door is a blue pill, lifted (centre 42 px above the screen's foot, was 24);
+   on the card it carries the counter, "NL-IT · 2/10" (the top line stays empty); on About it reads
+   the sync status instead of All lists.
    beta.3: the ↓ on opened pairs (the sheet through exportList, curator's layout, NL-LA.xlsx); a pair's
    ENT is the learn file's ENT, the naked form (t[0] may carry more: collēga, -ae).
    Words: v27/build.md ("the three words"); columns: v27/columns.md.
@@ -81,10 +84,11 @@ button,select,input{font-family:inherit}
 .top{position:relative;height:52px}
 /* ── the bottom line: one small door, centred, on every page — card: the list's name (to the table);
    table: All lists; All lists: About WordDock, with the sync status at the left; About: All lists. ── */
-.bar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:48px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-  align-items:center;padding:0 16px;padding-bottom:env(safe-area-inset-bottom);background:var(--bg)}
-.door{grid-column:2;background:none;border:none;padding:4px 10px;border-radius:6px;color:var(--sec);font-size:13px;line-height:1.4;cursor:pointer;white-space:nowrap}
-.door:hover{background:var(--card);color:var(--fg)}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:66px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;padding:0 16px calc(18px + env(safe-area-inset-bottom));background:var(--bg)}
+.door{grid-column:2;height:36px;padding:0 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:14px;font-weight:600;
+  cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
+.door:hover{background:#134f8a;border-color:#134f8a}
 .bar .sync-line{grid-column:1;justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .sync-line[hidden]{display:none}
 
@@ -573,7 +577,7 @@ function fitPage(){
   const first = tb.querySelector("tr:not(.detail)");
   const rowH = first ? first.getBoundingClientRect().height : ROW_H;
   const top = tb.getBoundingClientRect().top + window.scrollY;
-  const n = Math.floor((window.innerHeight - top - 24 - 48) / rowH);   // the bottom line
+  const n = Math.floor((window.innerHeight - top - 24 - 66) / rowH);   // the bottom line
   const next = Math.max(5, Math.min(20, n));
   if (next !== PAGE){ const f = page * PAGE; PAGE = next; page = Math.floor(f / PAGE); return true; }
   return false;
@@ -980,10 +984,10 @@ const visibleRows = () => { const rows = viewRows(); if (!rows) return []; const
 function renderBar(){
   const d = $("door"), s = $("syncLine");
   s.hidden = level !== "catalog" || !SYNC_API;
-  if (level === "study" && activeKey){ d.textContent = activeKey; d.onclick = () => goList(activeKey); }
+  if (level === "study" && activeKey){ d.textContent = activeKey + " · " + deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); d.onclick = () => goList(activeKey); }
   else if (level === "list"){ d.textContent = T.allLists; d.onclick = () => goCatalog(); }
   else if (level === "catalog"){ d.textContent = T.aboutLink; d.onclick = () => openAbout(); }
-  else if (level === "about"){ d.textContent = T.allLists; d.onclick = () => closeAbout(); }
+  else if (level === "about"){ d.textContent = syncStatus(); d.onclick = () => { if (SYNC_API) showSyncPanel(); }; }
   if (level === "list") renderStudyBtn();
   const cs = $("catStudy");
   if (level === "catalog" && activeKey && getList(activeKey).rows){ cs.hidden = false; cs.textContent = midDeck() ? T.resume(activeKey, deckScore, pipe.length) : T.studyK(activeKey); }
@@ -1219,11 +1223,10 @@ function renderSection(id, lists, unit){
 /* ── Bottom line ── */
 function renderPos(){
   const pos = $("pos"); pos.innerHTML = "";
-  if (level === "study"){
-    const s = document.createElement("span"); s.id = "deckCount"; pos.appendChild(s); paintCounter();
-  }
+  if (level === "study") paintCounter();
 }
-function paintCounter(){ const el = $("deckCount"); if (el) el.textContent = deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); }
+/* beta.4: the counter lives in the bottom door, after the list's name: "NL-IT · 2/10". */
+function paintCounter(){ if (level === "study" && activeKey) $("door").textContent = activeKey + " · " + deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); }
 
 /* ── The Study action: studies what the table shows ── */
 const midDeck = () => deckStarted && !deckDone;
@@ -1810,7 +1813,10 @@ function hideSyncPanel(){ $("syncBack").hidden = true; }
 /* The bottom line of LISTS: small, grey, one line of truth; tap opens the dialog.
    No key: "Keep progress safe". A key: "Sync is on", or "Not synced — will retry"
    after a request that got no answer. */
+/* beta.4: the same words for the door on About. A copy without sync (beta) shows "Sync is on" as a label only. */
+function syncStatus(){ if (!SYNC_API) return T.syncOn; if (!getSyncKey()) return T.keepSafe; return syncFailed ? T.notSynced : T.syncOn; }
 function renderSyncLine(){
+  if (level === "about"){ const d = $("door"); if (d) d.textContent = syncStatus(); }
   const a = $("syncLine"); if (!a) return;
   if (!SYNC_API){ a.hidden = true; return; }
   if (!getSyncKey()){ a.textContent = T.keepSafe; a.classList.remove("fail"); return; }
