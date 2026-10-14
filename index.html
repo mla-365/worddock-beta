@@ -45,6 +45,8 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.8: the W moves to the bottom line, fixed just left of the centre; the door starts just right of
+   the centre, so the two sit side by side: green W, then the grey door.
    beta.7: the W (top mark and the browser tab icon) in GitHub green #1f883d.
    beta.6: the W as a small blue mark, top centre, on every page (a mark, not a door).
    beta.5: the bottom door back to its old look (grey text, grey on hover), lifted and with the counter as in
@@ -87,15 +89,16 @@ button,select,input{font-family:inherit}
    every page, so the headings of the table and of All lists sit at the same y. ── */
 .top{position:relative;height:52px}
 /* beta.7: GitHub green (#1f883d). beta.6: the W, a small mark at the top centre of every page. A mark, not a door: it does nothing. */
-.mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:5px;background:#1f883d;
+.mark{position:absolute;right:calc(50% + 2px);top:24px;transform:translateY(-50%);width:22px;height:22px;border-radius:5px;background:#1f883d;
   color:#fff;font-family:Georgia,serif;font-weight:700;font-size:16px;line-height:22px;text-align:center;user-select:none;pointer-events:none}
 /* ── the bottom line: one small door, centred, on every page — card: the list's name (to the table);
    table: All lists; All lists: About WordDock, with the sync status at the left; About: All lists. ── */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:66px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
   align-items:center;padding:0 16px calc(18px + env(safe-area-inset-bottom));background:var(--bg)}
-.door{grid-column:2;background:none;border:none;padding:4px 10px;border-radius:6px;color:var(--sec);font-size:13px;line-height:1.4;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* beta.8: the door starts just right of the centre and grows to the right; the W stays put at its left. */
+.door{position:absolute;left:calc(50% + 2px);top:24px;transform:translateY(-50%);background:none;border:none;padding:4px 10px;border-radius:6px;color:var(--sec);font-size:13px;line-height:1.4;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
 .door:hover{background:var(--card);color:var(--fg)}
-.bar .sync-line{grid-column:1;justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .sync-line{grid-column:1;justify-self:start;max-width:calc(100% - 36px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .sync-line[hidden]{display:none}
 
 /* ── list surface ── */
@@ -339,7 +342,7 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
 </head>
 <body class="booting">
 
-<header class="top"><span class="mark" aria-hidden="true">W</span></header>
+<header class="top"></header>
 
 <main class="wrap" id="listSurface">
   <h1 class="h" id="h"></h1>
@@ -408,7 +411,7 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
 </section>
 
 <footer class="pos" id="pos"></footer>
-<nav class="bar" id="bar"><button class="sync-line" id="syncLine" hidden></button><button class="door" id="door"></button></nav>
+<nav class="bar" id="bar"><button class="sync-line" id="syncLine" hidden></button><span class="mark" aria-hidden="true">W</span><button class="door" id="door"></button></nav>
 <input type="file" id="fileIn" accept=".xlsx,.xlsm,.xls,.csv" hidden>
 
 <div class="dlg-back" id="dlgBack" hidden>
