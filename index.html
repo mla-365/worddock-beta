@@ -34,7 +34,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23efede6'/%3E%3Cg font-family='Didot,Bodoni 72,Georgia,serif' font-size='28' text-anchor='middle'%3E%3Ctext x='16.8' y='25.8' fill='%23aca695'%3EW%3C/text%3E%3Ctext x='15.4' y='24.4' fill='%23ffffff'%3EW%3C/text%3E%3Ctext x='16' y='25' fill='%23f3f1ea'%3EW%3C/text%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185fa5'/%3E%3Ctext x='16' y='25' font-family='Georgia,serif' font-weight='700' font-size='26' fill='%23ffffff' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E">
 <style>
 /* ── WordDock — v0.30-beta.3 ────────────────────────────────────
    THE BETA COPY (beta.worddock.app): the hub is built here, never on the live site. No sync, no
@@ -45,6 +45,8 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.11: no W on the pages; the tab icon is the classic W in blue (#185fa5); the bottom door centred;
+   the counter back on the top line, centred, as far from the top (42 px) as the door from the bottom.
    beta.10: the W embossed: paper-white, pressed up from the page (bottom line and tab icon).
    beta.9: the W (and the tab icon) in oxblood #5c1a1b, a test; Good back to white at rest.
    beta.8: the W moves to the bottom line, fixed just left of the centre; the door starts just right of
@@ -90,20 +92,14 @@ button,select,input{font-family:inherit}
 /* ── the top line: empty, except on the card, where the counter sits in its middle. One height on
    every page, so the headings of the table and of All lists sit at the same y. ── */
 .top{position:relative;height:52px}
-/* beta.7: GitHub green (#1f883d). beta.6: the W, a small mark at the top centre of every page. A mark, not a door: it does nothing. */
-.mark{position:absolute;right:calc(50% + 4px);top:24px;transform:translateY(-50%);width:26px;height:26px;
-  font-family:"Didot","Bodoni 72","Bodoni MT",Georgia,"Times New Roman",serif;font-weight:400;font-size:26px;line-height:26px;text-align:center;
-  color:#f6f5f0;   /* paper, pressed up: the letter is the page's own white, its relief drawn by light from the top left */
-  text-shadow:-1px -1px 0 #fff, 1px 1px 1px rgba(60,55,45,.5), 1px 2px 4px rgba(60,55,45,.22);
-  user-select:none;pointer-events:none}
 /* ── the bottom line: one small door, centred, on every page — card: the list's name (to the table);
    table: All lists; All lists: About WordDock, with the sync status at the left; About: All lists. ── */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:66px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
   align-items:center;padding:0 16px calc(18px + env(safe-area-inset-bottom));background:var(--bg)}
-/* beta.8: the door starts just right of the centre and grows to the right; the W stays put at its left. */
-.door{position:absolute;left:calc(50% + 2px);top:24px;transform:translateY(-50%);background:none;border:none;padding:4px 10px;border-radius:6px;color:var(--sec);font-size:13px;line-height:1.4;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* beta.11: the door centred on the bottom line, its middle 42 px above the screen's foot. */
+.door{position:absolute;left:50%;top:24px;transform:translate(-50%,-50%);background:none;border:none;padding:4px 10px;border-radius:6px;color:var(--sec);font-size:13px;line-height:1.4;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
 .door:hover{background:var(--card);color:var(--fg)}
-.bar .sync-line{grid-column:1;justify-self:start;max-width:calc(100% - 36px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .sync-line{grid-column:1;justify-self:start;max-width:calc(100% - 80px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .sync-line[hidden]{display:none}
 
 /* ── list surface ── */
@@ -295,8 +291,8 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
 .btn-again:hover{background:#fbf2f2}.btn-good:hover{background:#f1f8f1}   /* beta.9: Good white again; green is for the finished deck */
 
 /* ── bottom line: the counter, only in study ── */
-.pos{position:fixed;left:56px;right:56px;top:0;height:52px;z-index:40;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;
-  padding:0;font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--bg);pointer-events:none}
+.pos{position:fixed;left:56px;right:56px;top:42px;transform:translateY(-50%);z-index:40;display:flex;justify-content:center;align-items:center;
+  padding:4px 10px;font-size:13px;line-height:1.4;color:var(--sec);font-variant-numeric:tabular-nums;pointer-events:none}   /* beta.11: mirrors the bottom door */
 .pos:empty{display:none}
 .pos > *{pointer-events:auto}
 
@@ -415,7 +411,7 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
 </section>
 
 <footer class="pos" id="pos"></footer>
-<nav class="bar" id="bar"><button class="sync-line" id="syncLine" hidden></button><span class="mark" aria-hidden="true">W</span><button class="door" id="door"></button></nav>
+<nav class="bar" id="bar"><button class="sync-line" id="syncLine" hidden></button><button class="door" id="door"></button></nav>
 <input type="file" id="fileIn" accept=".xlsx,.xlsm,.xls,.csv" hidden>
 
 <div class="dlg-back" id="dlgBack" hidden>
@@ -998,7 +994,7 @@ const visibleRows = () => { const rows = viewRows(); if (!rows) return []; const
 function renderBar(){
   const d = $("door"), s = $("syncLine");
   s.hidden = level !== "catalog" || !SYNC_API;
-  if (level === "study" && activeKey){ d.textContent = activeKey + " · " + deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); d.onclick = () => goList(activeKey); }
+  if (level === "study" && activeKey){ d.textContent = activeKey; d.onclick = () => goList(activeKey); }
   else if (level === "list"){ d.textContent = T.allLists; d.onclick = () => goCatalog(); }
   else if (level === "catalog"){ d.textContent = T.aboutLink; d.onclick = () => openAbout(); }
   else if (level === "about"){ d.textContent = syncStatus(); d.onclick = () => { if (SYNC_API) showSyncPanel(); }; }
@@ -1237,10 +1233,12 @@ function renderSection(id, lists, unit){
 /* ── Bottom line ── */
 function renderPos(){
   const pos = $("pos"); pos.innerHTML = "";
-  if (level === "study") paintCounter();
+  if (level === "study"){
+    const s = document.createElement("span"); s.id = "deckCount"; pos.appendChild(s); paintCounter();
+  }
 }
-/* beta.4: the counter lives in the bottom door, after the list's name: "NL-IT · 2/10". */
-function paintCounter(){ if (level === "study" && activeKey) $("door").textContent = activeKey + " · " + deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); }
+/* beta.11: the counter back on its own, top centre; the bottom door names the list. */
+function paintCounter(){ const el = $("deckCount"); if (el) el.textContent = deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); }
 
 /* ── The Study action: studies what the table shows ── */
 const midDeck = () => deckStarted && !deckDone;
