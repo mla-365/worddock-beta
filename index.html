@@ -45,6 +45,8 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.5: the bottom door back to its old look (grey text, grey on hover), lifted and with the counter as in
+   beta.4; Good carries a soft green at rest.
    beta.4: the bottom door is a blue pill, lifted (centre 42 px above the screen's foot, was 24);
    on the card it carries the counter, "NL-IT · 2/10" (the top line stays empty); on About it reads
    the sync status instead of All lists.
@@ -86,9 +88,8 @@ button,select,input{font-family:inherit}
    table: All lists; All lists: About WordDock, with the sync status at the left; About: All lists. ── */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:66px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
   align-items:center;padding:0 16px calc(18px + env(safe-area-inset-bottom));background:var(--bg)}
-.door{grid-column:2;height:36px;padding:0 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:14px;font-weight:600;
-  cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
-.door:hover{background:#134f8a;border-color:#134f8a}
+.door{grid-column:2;background:none;border:none;padding:4px 10px;border-radius:6px;color:var(--sec);font-size:13px;line-height:1.4;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}
+.door:hover{background:var(--card);color:var(--fg)}
 .bar .sync-line{grid-column:1;justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .sync-line[hidden]{display:none}
 
@@ -278,7 +279,8 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
 .btn:focus{outline:none}
 .btn-again{border:1px solid color-mix(in srgb,var(--again) 55%,#fff);color:var(--again-ink)}
 .btn-good{border:1px solid color-mix(in srgb,var(--good) 55%,#fff);color:var(--good-ink)}
-.btn-again:hover{background:#fbf2f2}.btn-good:hover{background:#f1f8f1}
+.btn-good{background:#f1f8f1}   /* beta.5: Good carries its hover green at rest */
+.btn-again:hover{background:#fbf2f2}.btn-good:hover{background:#e3f1e4}
 
 /* ── bottom line: the counter, only in study ── */
 .pos{position:fixed;left:56px;right:56px;top:0;height:52px;z-index:40;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;
