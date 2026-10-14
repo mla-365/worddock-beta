@@ -45,6 +45,7 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.6: the W as a small blue mark, top centre, on every page (a mark, not a door).
    beta.5: the bottom door back to its old look (grey text, grey on hover), lifted and with the counter as in
    beta.4; Good carries a soft green at rest.
    beta.4: the bottom door is a blue pill, lifted (centre 42 px above the screen's foot, was 24);
@@ -84,6 +85,9 @@ button,select,input{font-family:inherit}
 /* ── the top line: empty, except on the card, where the counter sits in its middle. One height on
    every page, so the headings of the table and of All lists sit at the same y. ── */
 .top{position:relative;height:52px}
+/* beta.6: the W, a small blue mark at the top centre of every page. A mark, not a door: it does nothing. */
+.mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:5px;background:var(--accent);
+  color:#fff;font-family:Georgia,serif;font-weight:700;font-size:16px;line-height:22px;text-align:center;user-select:none;pointer-events:none}
 /* ── the bottom line: one small door, centred, on every page — card: the list's name (to the table);
    table: All lists; All lists: About WordDock, with the sync status at the left; About: All lists. ── */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:40;height:66px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
@@ -334,7 +338,7 @@ body.booting .wrap,body.booting .cat,body.booting .about{visibility:hidden}
 </head>
 <body class="booting">
 
-<header class="top"></header>
+<header class="top"><span class="mark" aria-hidden="true">W</span></header>
 
 <main class="wrap" id="listSurface">
   <h1 class="h" id="h"></h1>
