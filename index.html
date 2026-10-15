@@ -46,6 +46,7 @@
    beta.2 (hub round 2): a hub pair counts as published, so a My list with its name steps aside to
    NAME-OWN through the same block as for a WD list; the test list is NL-LA-TEST (two-code names
    belong to the hub); a WD list name that is also a hub pair gets one console warning at boot.
+   beta.14: the counter back in the bottom door after the list's name ("NL-IT · 2/10"); the top line is empty.
    beta.13: the tab icon squarer and flatter: one orange, a dark rim, the shade on the right and bottom.
    beta.12: the tab icon is an orange beveled W, charcoal letter.
    beta.11: no W on the pages; the tab icon is the classic W in blue (#185fa5); the bottom door centred;
@@ -997,7 +998,7 @@ const visibleRows = () => { const rows = viewRows(); if (!rows) return []; const
 function renderBar(){
   const d = $("door"), s = $("syncLine");
   s.hidden = level !== "catalog" || !SYNC_API;
-  if (level === "study" && activeKey){ d.textContent = activeKey; d.onclick = () => goList(activeKey); }
+  if (level === "study" && activeKey){ d.textContent = activeKey + " · " + deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); d.onclick = () => goList(activeKey); }
   else if (level === "list"){ d.textContent = T.allLists; d.onclick = () => goCatalog(); }
   else if (level === "catalog"){ d.textContent = T.aboutLink; d.onclick = () => openAbout(); }
   else if (level === "about"){ d.textContent = syncStatus(); d.onclick = () => { if (SYNC_API) showSyncPanel(); }; }
@@ -1236,12 +1237,10 @@ function renderSection(id, lists, unit){
 /* ── Bottom line ── */
 function renderPos(){
   const pos = $("pos"); pos.innerHTML = "";
-  if (level === "study"){
-    const s = document.createElement("span"); s.id = "deckCount"; pos.appendChild(s); paintCounter();
-  }
+  if (level === "study") paintCounter();
 }
-/* beta.11: the counter back on its own, top centre; the bottom door names the list. */
-function paintCounter(){ const el = $("deckCount"); if (el) el.textContent = deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); }
+/* beta.14: the counter after the list's name in the bottom door, "NL-IT · 2/10"; nothing on the top line. */
+function paintCounter(){ if (level === "study" && activeKey) $("door").textContent = activeKey + " · " + deckScore + "/" + pipe.length + (deckDone ? " ✓" : ""); }
 
 /* ── The Study action: studies what the table shows ── */
 const midDeck = () => deckStarted && !deckDone;
